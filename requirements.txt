@@ -1,0 +1,43 @@
+# Core FastAPI and ASGI server
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+
+# Pydantic AI and dependencies
+pydantic-ai
+pydantic
+
+# NVIDIA NIM integration
+langchain-nvidia-ai-endpoints==0.3.5
+openai==1.57.4
+
+# Observability
+logfire==2.3.0
+
+# HTTP client for async requests
+httpx==0.28.1
+
+# Environment variables
+python-dotenv==1.0.1
+
+# Database (SQLAlchemy + PostgreSQL)
+sqlalchemy==2.0.36
+psycopg2-binary==2.9.10
+alembic==1.14.0
+
+# SQLModel (Pydantic + SQLAlchemy)
+sqlmodel==0.0.22
+
+# Excel export functionality
+openpyxl==3.1.5
+xlsxwriter==3.2.0
+
+# Date/Time utilities
+python-dateutil==2.9.0
+
+# CORS support
+python-multipart==0.0.20
+
+# Testing
+pytest==8.3.4
+pytest-asyncio==0.24.0
+httpx==0.28.1
