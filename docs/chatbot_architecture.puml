@@ -1,0 +1,136 @@
+@startuml Chatbot_Clean_Architecture
+skinparam backgroundColor #0f172a
+skinparam defaultFontColor #f8fafc
+skinparam ArrowColor #a855f7
+skinparam ComponentBackgroundColor #1e293b
+skinparam PackageBackgroundColor #0f172a
+skinparam InterfaceBackgroundColor #0f172a
+skinparam NoteBackgroundColor #1e293b
+skinparam DatabaseBackgroundColor #1e293b
+skinparam CloudBackgroundColor #1e293b
+skinparam FolderBackgroundColor #1e293b
+skinparam CardBackgroundColor #1e293b
+skinparam FileBackgroundColor #1e293b
+skinparam backgroundColor #0f172a
+skinparam defaultFontColor #f8fafc
+skinparam ArrowColor #a855f7
+skinparam ComponentBorderColor #6366f1
+skinparam PackageBorderColor #4338ca
+skinparam ClassBorderColor #8b5cf6
+skinparam InterfaceBorderColor #22c55e
+skinparam NoteFontColor #0f172a
+
+title 🤖 Chatbot Support System - Clean Architecture\n<size:12>Port: 7842 | Python + FastAPI + Pydantic AI</size>
+
+' === FRONTEND ===
+package "🖥️ Frontend (Next.js)" as FRONTEND #1e3a5f {
+    component "📱 ChatbotWidget.tsx" as CW #3b82f6
+    component "🎨 CSS/Styling" as CSS #60a5fa
+}
+
+' === CHATBOT API ===
+package "🤖 Chatbot API (FastAPI :7842)" as CHATBOT #1e293b {
+    
+    ' INTERFACES
+    package "🔌 Interfaces Layer" as INTERFACES #f59e0b/fcd34d {
+        component "🛣️ API Routes\n/chat\n/feedback\n/health" as ROUTES #f59e0b
+        component "💉 Depends()\nDI Container" as DI #fbbf24
+    }
+    
+    ' APPLICATION
+    package "📋 Application Layer" as APPLICATION #22c55e/4ade80 {
+        component "💬 ChatService\norchestrates flow" as CHAT_SVC #22c55e
+        component "📝 FeedbackService\nsaves corrections" as FEED_SVC #4ade80
+    }
+    
+    ' DOMAIN
+    package "🎯 Domain Layer (Core)" as DOMAIN #8b5cf6/a78bfa {
+        interface "IChatAgent" as IAGENT #8b5cf6
+        interface "IBackendGateway" as IGW #a78bfa
+        
+        class "📦 Models" as MODELS #7c3aed {
+            + ChatRequest
+            + ChatResponse
+            + Employee
+            + PauseRecord
+            + FeedbackRequest
+            --
+            + Turno (Shift)
+            + Receso (Break)
+            + Firma (Attendance)
+            + Area (Department)
+        }
+    }
+    
+    ' INFRASTRUCTURE
+    package "⚙️ Infrastructure Layer" as INFRASTRUCTURE #ec4899/f472b6 {
+        
+        package "🧠 Agent" as AGENT_PKG #db2777 {
+            component "🤖 PydanticChatAgent\n(Pydantic AI)" as AGENT #ec4899
+            
+            note right of AGENT
+                **Available Tools:**
+                🔧 list_employees()
+                🔧 get_pause_history()
+                🔧 check_backend_health()
+                🔧 get_navigation_guide()
+                🔧 save_user_feedback()
+            end note
+        }
+        
+        package "🌐 External" as EXT_PKG #be185d {
+            component "🔗 FlaskBackendGateway\nHTTP Client (httpx)" as FLASK_GW #f472b6
+        }
+        
+        package "📁 Common" as COMMON_PKG #9d174d {
+            component "⚙️ Config\n(.env loader)" as CONFIG #f9a8d4
+            component "📄 ContextLoader\n(Markdown KB)" as CTX #fce7f3
+        }
+    }
+}
+
+' === EXTERNAL SERVICES ===
+package "☁️ External Services" as EXTERNAL #0891b2/22d3ee {
+    cloud "🟢 NVIDIA NIM\nLlama 3 API" as NVIDIA #22d3ee
+    database "🔵 Flask API\n:5000" as FLASK_API #06b6d4
+    storage "📚 Knowledge Base\n/knowledge/*.md" as KB #0ea5e9
+    file ".env" as ENV #38bdf8
+}
+
+' === RELATIONSHIPS ===
+' === DATABASE ===
+database "🐘 PostgreSQL :5435\n(Migrado)" as POSTGRES #f59e0b 
+
+' === RELATIONSHIPS ===
+CW <--> ROUTES : HTTP POST /chat
+
+FLASK_API <--> POSTGRES : SQL
+
+CSS .. CW
+
+ROUTES --> DI
+ROUTES --> FEED_SVC
+DI --> CHAT_SVC : inject
+
+CHAT_SVC --> IAGENT : depends on
+AGENT ..|> IAGENT : <<implements>>
+FLASK_GW ..|> IGW : <<implements>>
+
+AGENT --> NVIDIA : 🌐 LLM API
+AGENT --> IGW : uses
+FLASK_GW --> FLASK_API : 🌐 HTTP
+
+CTX --> KB : 📖 reads
+CONFIG --> ENV : 📖 reads
+
+' === NOTES ===
+note top of CHATBOT
+    **Principios SOLID:**
+    ✅ SRP: Cada clase tiene una sola responsabilidad
+    ✅ OCP: Abierto a extensión (nuevos Gateways)
+    ✅ LSP: Interfaces intercambiables
+    ✅ ISP: Interfaces específicas
+    ✅ DIP: Alto nivel depende de abstracciones
+end note
+
+@enduml

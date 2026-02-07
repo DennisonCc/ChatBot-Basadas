@@ -12,6 +12,109 @@ interface ChatbotWidgetProps {
     apiUrl?: string;
 }
 
+// User Avatar SVG Component
+const UserAvatar = () => (
+    <svg className="user-avatar" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="userGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style={{ stopColor: '#6366f1', stopOpacity: 1 }} />
+                <stop offset="100%" style={{ stopColor: '#a855f7', stopOpacity: 1 }} />
+            </linearGradient>
+        </defs>
+        <circle cx="16" cy="16" r="16" fill="url(#userGrad)" opacity="0.15" />
+        <circle cx="16" cy="12" r="5" fill="url(#userGrad)" />
+        <path d="M6 26c0-5.5 4.5-8 10-8s10 2.5 10 8" fill="url(#userGrad)" />
+    </svg>
+);
+
+// Rich Message Formatter
+const formatMessage = (text: string) => {
+    const parts = [];
+    let currentText = text;
+    let key = 0;
+
+    // Split by code blocks first (```code```)
+    const codeBlockRegex = /```([\s\S]*?)```/g;
+    const segments = currentText.split(codeBlockRegex);
+
+    segments.forEach((segment, index) => {
+        if (index % 2 === 1) {
+            // This is a code block
+            parts.push(
+                <pre key={key++} className="code-block">
+                    <code>{segment.trim()}</code>
+                </pre>
+            );
+        } else {
+            // Regular text - process inline formatting
+            const lines = segment.split('\n');
+            lines.forEach((line, lineIdx) => {
+                if (!line.trim()) {
+                    parts.push(<br key={key++} />);
+                    return;
+                }
+
+                // Check for lists
+                if (line.trim().match(/^[-*•]\s/)) {
+                    const content = line.replace(/^[-*•]\s/, '');
+                    parts.push(
+                        <div key={key++} className="list-item">
+                            <span className="bullet">•</span>
+                            <span>{processInlineFormatting(content)}</span>
+                        </div>
+                    );
+                } else if (line.trim().match(/^\d+\.\s/)) {
+                    const match = line.match(/^(\d+)\.\s(.+)/);
+                    if (match) {
+                        parts.push(
+                            <div key={key++} className="list-item numbered">
+                                <span className="number">{match[1]}.</span>
+                                <span>{processInlineFormatting(match[2])}</span>
+                            </div>
+                        );
+                    }
+                } else {
+                    // Regular paragraph
+                    parts.push(
+                        <p key={key++}>{processInlineFormatting(line)}</p>
+                    );
+                }
+            });
+        }
+    });
+
+    return parts;
+};
+
+// Process inline formatting (**bold**, `code`, etc.)
+const processInlineFormatting = (text: string) => {
+    const parts = [];
+    let currentText = text;
+    let key = 0;
+
+    // Process **bold**
+    const boldRegex = /\*\*([^*]+)\*\*/g;
+    const segments = currentText.split(boldRegex);
+
+    segments.forEach((segment, index) => {
+        if (index % 2 === 1) {
+            parts.push(<strong key={key++} className="highlight">{segment}</strong>);
+        } else {
+            // Process `inline code`
+            const codeSegments = segment.split(/`([^`]+)`/g);
+            codeSegments.forEach((codeSeg, codeIdx) => {
+                if (codeIdx % 2 === 1) {
+                    parts.push(<code key={key++} className="inline-code">{codeSeg}</code>);
+                } else if (codeSeg) {
+                    parts.push(<span key={key++}>{codeSeg}</span>);
+                }
+            });
+        }
+    });
+
+    return parts;
+};
+
 const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     currentScreen = "Principal",
     apiUrl = "http://localhost:7842"
@@ -19,7 +122,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const [messages, setMessages] = useState<Message[]>([
         {
-            text: `Hola, soy tu Consultor de RRHH. Analizando el contexto, veo que estás en la sección de **${currentScreen}**. ¿Cómo puedo optimizar tu gestión hoy?`,
+            text: `Hola, soy tu **Consultor de RRHH** especializado en el Sistema de Gestión de Personal. Estás en la sección de **${currentScreen}**. ¿En qué puedo ayudarte?`,
             isBot: true
         }
     ]);
@@ -32,6 +135,12 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     };
 
     useEffect(scrollToBottom, [messages]);
+
+    // Sugerir corrección de forma conversacional
+    const suggestCorrection = (msgIndex: number) => {
+        const correctionPrompt = "Parece que la información anterior no es correcta. Por favor, indícame cuál es la información correcta y la guardaré para futuras consultas.";
+        setInputValue(correctionPrompt);
+    };
 
     const handleSend = async (): Promise<void> => {
         if (!inputValue.trim()) return;
@@ -58,7 +167,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
             setMessages(prev => [...prev, { text: data.response, isBot: true }]);
         } catch (error) {
             setMessages(prev => [...prev, {
-                text: "Parece que hay una interrupción con el servidor inteligente. Por favor, verifica la conexión.",
+                text: "⚠️ Parece que hay una interrupción con el servidor inteligente. Por favor, verifica la conexión.",
                 isBot: true
             }]);
         } finally {
@@ -74,7 +183,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                 ) : (
                     <div className="launcher-content">
                         <span className="pulse-ring"></span>
-                        <img src="/logo.png" alt="AI HR" className="launcher-logo" />
+                        <img src="/ai-logo.png" alt="Nexus AI" className="launcher-logo" />
                     </div>
                 )}
             </button>
@@ -84,7 +193,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                     <div className="chat-header">
                         <div className="header-brand">
                             <div className="logo-container">
-                                <img src="/logo.png" alt="AI HR" />
+                                <img src="/ai-logo.png" alt="Nexus AI" />
                                 <span className="status-dot"></span>
                             </div>
                             <div className="header-text">
@@ -101,17 +210,31 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                     <div className="chat-body">
                         {messages.map((msg, idx) => (
                             <div key={idx} className={`message-row ${msg.isBot ? 'bot' : 'user'}`}>
-                                {msg.isBot && <img src="/logo.png" className="mini-logo" alt="bot" />}
+                                {msg.isBot ? (
+                                    <img src="/ai-logo.png" className="mini-logo ai-logo" alt="Nexus AI" />
+                                ) : (
+                                    <UserAvatar />
+                                )}
                                 <div className="bubble">
-                                    {msg.text.split('\n').map((line, i) => (
-                                        <p key={i}>{line}</p>
-                                    ))}
+                                    {msg.isBot ? formatMessage(msg.text) : <p>{msg.text}</p>}
+                                    {msg.isBot && idx > 0 && (
+                                        <button
+                                            className="feedback-btn"
+                                            onClick={() => suggestCorrection(idx)}
+                                            title="¿Información incorrecta? Haz clic para corregir"
+                                        >
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
+                                                <path d="M12 20h9" />
+                                                <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
+                                            </svg>
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         ))}
                         {isLoading && (
                             <div className="message-row bot thinking-row">
-                                <img src="/logo.png" className="mini-logo animate-pulse" alt="bot" />
+                                <img src="/ai-logo.png" className="mini-logo ai-logo animate-pulse" alt="Nexus AI" />
                                 <div className="bubble typing">
                                     <span></span><span></span><span></span>
                                 </div>
@@ -124,7 +247,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                         <div className="input-wrapper">
                             <input
                                 type="text"
-                                placeholder="Escribe tu consulta o pide una inferencia..."
+                                placeholder="Escribe tu consulta sobre el sistema..."
                                 value={inputValue}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInputValue(e.target.value)}
                                 onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && handleSend()}

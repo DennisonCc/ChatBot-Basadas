@@ -354,3 +354,173 @@
     background: rgba(255, 255, 255, 0.1);
     border-radius: 10px;
 }
+
+/* User Avatar Styling */
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    filter: drop-shadow(0 2px 8px rgba(99, 102, 241, 0.3));
+}
+
+/* AI Logo Enhanced */
+.ai-logo {
+    filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.4)) drop-shadow(0 0 12px rgba(168, 85, 247, 0.3));
+    animation: logo-glow 3s ease-in-out infinite;
+}
+
+@keyframes logo-glow {
+
+    0%,
+    100% {
+        filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.4)) drop-shadow(0 0 12px rgba(168, 85, 247, 0.3));
+    }
+
+    50% {
+        filter: drop-shadow(0 0 12px rgba(99, 102, 241, 0.6)) drop-shadow(0 0 18px rgba(168, 85, 247, 0.5));
+    }
+}
+
+/* Rich Text Formatting */
+.bubble strong.highlight {
+    color: #a5b4fc;
+    font-weight: 600;
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+}
+
+.bubble code.inline-code {
+    background: rgba(99, 102, 241, 0.15);
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    color: #c4b5fd;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.1);
+}
+
+.bubble .code-block {
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 12px;
+    padding: 16px;
+    margin: 12px 0;
+    overflow-x: auto;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3),
+        inset 0 0 20px rgba(99, 102, 241, 0.05);
+}
+
+.bubble .code-block code {
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    color: #e0e7ff;
+    line-height: 1.6;
+    display: block;
+}
+
+/* List Styling */
+.bubble .list-item {
+    display: flex;
+    gap: 10px;
+    margin: 8px 0;
+    align-items: flex-start;
+}
+
+.bubble .list-item .bullet {
+    color: #6366f1;
+    font-size: 18px;
+    line-height: 1.4;
+    font-weight: bold;
+    flex-shrink: 0;
+    text-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+}
+
+.bubble .list-item.numbered .number {
+    color: #a855f7;
+    font-weight: 600;
+    min-width: 24px;
+    text-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+}
+
+.bubble .list-item span:last-child {
+    flex: 1;
+}
+
+/* Enhanced Bubble Styling */
+.bot .bubble {
+    background: linear-gradient(135deg,
+            rgba(15, 23, 42, 0.8) 0%,
+            rgba(30, 41, 59, 0.6) 100%);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.user .bubble {
+    background: linear-gradient(135deg, #6366f1 0%, #7c3aed 100%);
+    box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4),
+        0 0 15px rgba(124, 58, 237, 0.2);
+}
+
+@media (max-width: 480px) {
+    .chat-window {
+        width: calc(100vw - 40px);
+        right: 20px;
+    }
+
+    .bubble code.inline-code {
+        font-size: 12px;
+    }
+
+    .bubble .code-block code {
+        font-size: 12px;
+    }
+}
+
+/* ========================================
+   FEEDBACK SYSTEM STYLES
+   ======================================== */
+
+/* Feedback Button in Bot Messages */
+.feedback-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all 0.3s ease;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.bot .bubble {
+    position: relative;
+}
+
+.bot .bubble:hover .feedback-btn {
+    opacity: 1;
+}
+
+.feedback-btn:hover {
+    background: rgba(99, 102, 241, 0.3);
+    border-color: rgba(99, 102, 241, 0.5);
+    color: #a5b4fc;
+    transform: scale(1.1);
+}
+
+.feedback-btn svg {
+    width: 14px;
+    height: 14px;
+}

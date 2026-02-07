@@ -6,3 +6,6 @@
   - **Buscador**: Parte superior por CI.
   - **Selector**: Tipos de pausa (Almuerzo, Capacitación, etc.).
   - **Historial**: Tabla inferior con opciones de Actualizar y Eliminar.
+
+
+** garegar las que falten 

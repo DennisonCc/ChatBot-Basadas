@@ -11,8 +11,8 @@ class PydanticChatAgent(IChatAgent):
     def __init__(self, backend_gateway: IBackendGateway):
         self.backend_gateway = backend_gateway
         
-        # Load system prompt from modular markdown files
-        self.SYSTEM_PROMPT = loader.load_context("main.md")
+        # Load system prompt from modular markdown files (including user corrections)
+        self.SYSTEM_PROMPT = loader.load_full_context("main.md")
         
         # Initialize Provider and Model
         provider = OpenAIProvider(
@@ -66,6 +66,40 @@ class PydanticChatAgent(IChatAgent):
                 "Historial": "Se encuentra en la parte inferior de 'Tiempos Fuera'. Aquí puedes 'Actualizar' una pausa para ponerle la hora de fin si el empleado ya regresó.",
             }
             return guides.get(screen_name, "Pantalla no reconocida. Las opciones principales son: Login, Personal, Tiempos Fuera, Historial.")
+
+        @self.agent.tool
+        def save_user_feedback(ctx: RunContext[IBackendGateway], info_tipo: str, info_contenido: str, contexto: str = "") -> str:
+            """
+            Guarda información adicional proporcionada por el usuario durante la conversación.
+            SOLO usar cuando el usuario confirma que la información es correcta.
+            NUNCA guardar información que contradiga la KB existente.
+            
+            Args:
+                info_tipo: Tipo de información (ej: 'tip', 'configuracion', 'proceso', 'area', 'horario')
+                info_contenido: El contenido de la información a guardar
+                contexto: Contexto adicional de la conversación
+            
+            Returns:
+                Mensaje de confirmación o error
+            """
+            from app.application.feedback_service import feedback_service
+            from app.domain.models import FeedbackRequest
+            
+            # Crear el request de feedback con formato de información adicional
+            feedback = FeedbackRequest(
+                original_question=f"[{info_tipo.upper()}]",
+                original_response=contexto,
+                corrected_response=info_contenido,
+                category=info_tipo,
+                session_id="organic-feedback"
+            )
+            
+            result = feedback_service.save_feedback(feedback)
+            
+            if result.success:
+                return f"✅ Información guardada correctamente (ID: {result.feedback_id}). Esta información estará disponible para futuras consultas."
+            else:
+                return f"❌ No se pudo guardar la información: {result.message}"
 
     async def get_response(self, message: str, current_screen: str = "Principal") -> str:
         full_message = f"[Contexto: El usuario está en la pantalla '{current_screen}']\nUsuario: {message}"

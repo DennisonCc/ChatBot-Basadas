@@ -1,0 +1,95 @@
+@startuml System_Integration
+skinparam backgroundColor #1a1a2e
+skinparam defaultFontColor #eee
+skinparam ArrowColor #a855f7
+skinparam ComponentBackgroundColor #2d3a4f
+skinparam PackageBackgroundColor #1a1a2e
+skinparam DatabaseBackgroundColor #f59e0b
+skinparam StorageBackgroundColor #2d3a4f
+skinparam CloudBackgroundColor #2d3a4f
+skinparam LegendBackgroundColor #0f172a
+skinparam backgroundColor #1a1a2e
+skinparam defaultFontColor #eee
+skinparam ArrowColor #a855f7
+skinparam ComponentBorderColor #6366f1
+skinparam PackageBorderColor #4338ca
+skinparam DatabaseBorderColor #f59e0b
+
+title 🔄 Sistema Integrado - Arquitectura Completa\n<size:12>Chatbot + Flask API + PostgreSQL + NVIDIA NIM</size>
+
+' === FRONTEND LAYER ===
+package "🖥️ Capa de Presentación" as PRESENTATION #2d3a4f {
+    component "☕ Java Swing\n(Sistema Principal RRHH)" as JAVA #3b82f6
+    component "⚛️ Next.js Demo\n(ChatbotWidget)" as NEXTJS #60a5fa
+}
+
+' === CHATBOT SERVICE ===
+package "🤖 Chatbot Service (:7842)" as CHATBOT_SVC #4c1d95 {
+    component "FastAPI" as FASTAPI #8b5cf6
+    component "Pydantic AI Agent" as PYDANTIC #a78bfa
+    storage "📚 Knowledge Base\n/knowledge/*.md" as KB #c4b5fd
+    
+    FASTAPI --> PYDANTIC
+    PYDANTIC --> KB
+}
+
+' === FLASK SERVICE ===
+package "🔵 Flask API (:5000)" as FLASK_SVC #0369a1 {
+    component "Flask App" as FLASK #0ea5e9
+    component "SQLAlchemy ORM" as ORM #22d3ee
+    component "Swagger Docs" as SWAGGER #67e8f9
+    
+    FLASK --> ORM
+    FLASK --> SWAGGER
+}
+
+' === EXTERNAL AI ===
+cloud "☁️ NVIDIA NIM" as NVIDIA #22c55e {
+    component "🦙 Llama 3.3 70B\nInstruct" as LLAMA #4ade80
+}
+
+' === DATABASE ===
+database "🐘 PostgreSQL :5435\n(Migrado)" as POSTGRES #f59e0b {
+    folder "Schemas" {
+        storage "empleado" as TBL_EMP
+        storage "pausas" as TBL_PAUSE
+        storage "turnos" as TBL_SHIFT
+        storage "recesos" as TBL_BREAK
+        storage "firmas" as TBL_SIGN
+        storage "areas" as TBL_AREA
+    }
+}
+
+' === CONNECTIONS ===
+
+' Frontend to services
+JAVA <--> FLASK : REST API\n(Gestión RRHH)
+NEXTJS <--> FASTAPI : REST API\n(Chat Widget)
+
+' Chatbot internal
+PYDANTIC --> FLASK : Tool Calls\n(get_info)
+PYDANTIC --> NVIDIA : LLM API\n(completions)
+
+' Flask to DB
+ORM <--> POSTGRES : SQL Queries
+
+' === LEGEND ===
+legend right
+    |= Color |= Componente |
+    | <#3b82f6> | Frontend Apps |
+    | <#8b5cf6> | Chatbot (FastAPI) |
+    | <#0ea5e9> | Flask API |
+    | <#22c55e> | AI Services |
+    | <#f59e0b> | Database |
+endlegend
+
+' === PORTS NOTE ===
+note bottom of POSTGRES
+    **Puertos del Sistema:**
+    • Chatbot: 7842
+    • Flask API: 5000
+    • PostgreSQL: 5435
+    • Next.js Dev: 3000
+end note
+
+@enduml

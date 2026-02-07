@@ -1,0 +1,131 @@
+@startuml Chat_Sequence_Flow
+skinparam backgroundColor #0f172a
+skinparam defaultFontColor #f8fafc
+skinparam ParticipantBorderColor #6366f1
+skinparam SequenceLifeLineBorderColor #818cf8
+skinparam SequenceMessageAlign center
+skinparam ActorBackgroundColor #3b82f6
+skinparam ParticipantBackgroundColor #1e293b
+skinparam ArrowColor #a855f7
+skinparam NoteBackgroundColor #1e293b
+skinparam NoteBorderColor #6366f1
+skinparam backgroundColor #0f172a
+skinparam defaultFontColor #f8fafc
+skinparam ParticipantBorderColor #6366f1
+skinparam SequenceLifeLineBorderColor #818cf8
+skinparam SequenceMessageAlign center
+
+title 💬 Flujo de Conversación del Chatbot\n<size:11>FastAPI + Pydantic AI + NVIDIA NIM</size>
+
+actor "👤 Usuario" as USER #3b82f6
+participant "📱 ChatbotWidget\n(Next.js)" as WIDGET #60a5fa
+participant "🛣️ FastAPI\n/chat endpoint" as API #f59e0b
+participant "💬 ChatService" as SVC #22c55e
+participant "🤖 PydanticAgent" as AGENT #8b5cf6
+participant "☁️ NVIDIA NIM\nLlama 3" as NVIDIA #10b981
+participant "🔗 FlaskGateway" as GW #ec4899
+participant "🔵 Flask API\n:5000" as FLASK #0ea5e9
+
+autonumber
+
+== 📩 Mensaje del Usuario ==
+
+USER -> WIDGET : Escribe "¿Quiénes están en pausa hoy?"
+activate WIDGET #60a5fa
+
+WIDGET -> API : POST /chat\n{"message": "...", "current_screen": "Tiempos Fuera"}
+activate API #f59e0b
+
+API -> SVC : process_message(ChatRequest)
+activate SVC #22c55e
+
+SVC -> AGENT : get_response(message, screen)
+activate AGENT #8b5cf6
+
+== 🧠 Procesamiento IA ==
+
+AGENT -> AGENT : Prepara contexto\n+ Knowledge Base\n+ System Prompt
+
+AGENT -> NVIDIA : API call con tools disponibles
+activate NVIDIA #10b981
+
+note right of NVIDIA
+    El LLM decide usar
+    **get_pause_history** tool
+end note
+
+NVIDIA --> AGENT : tool_call: get_pause_history(fecha=hoy)
+deactivate NVIDIA
+
+== 🔧 Tool Execution ==
+
+AGENT -> GW : get_pause_history(ci='%', fecha='2026-02-07')
+activate GW #ec4899
+
+GW -> FLASK : GET /api/pausas?fecha_inicio=2026-02-07&fecha_fin=2026-02-07
+activate FLASK #0ea5e9
+
+FLASK --> GW : [{"id": 1, "empleado_nombre": "Juan", "tipo": "ALMUERZO"}, ...]
+deactivate FLASK
+
+GW --> AGENT : List[PauseRecord]
+deactivate GW
+
+== 🎯 Generación de Respuesta ==
+
+AGENT -> NVIDIA : tool_result + continuar generación
+activate NVIDIA #10b981
+
+NVIDIA --> AGENT : "Hoy hay 3 empleados en pausa:\n• Juan (Almuerzo)\n• María (Capacitación)..."
+deactivate NVIDIA
+
+AGENT --> SVC : response_text
+deactivate AGENT
+
+SVC --> API : ChatResponse
+deactivate SVC
+
+API --> WIDGET : {"response": "Hoy hay 3 empleados..."}
+deactivate API
+
+WIDGET --> USER : Muestra respuesta formateada
+deactivate WIDGET
+
+== 📝 Flujo de Feedback (opcional) ==
+
+USER -> WIDGET : Click en botón ✏️ feedback
+activate WIDGET #60a5fa
+
+WIDGET -> USER : "Por favor, indícame la información correcta"
+
+USER -> WIDGET : "En realidad el horario de almuerzo es de 12:00 a 13:00"
+
+WIDGET -> API : POST /chat (mensaje de corrección)
+activate API #f59e0b
+
+API -> SVC : process_message
+activate SVC #22c55e
+
+SVC -> AGENT : get_response
+activate AGENT #8b5cf6
+
+note right of AGENT
+    Agent detecta corrección
+    y usa **save_user_feedback** tool
+end note
+
+AGENT -> AGENT : save_user_feedback(\n  info_tipo="horario",\n  info_contenido="Almuerzo: 12:00-13:00"\n)
+
+AGENT --> SVC : "✅ Información guardada"
+deactivate AGENT
+
+SVC --> API : ChatResponse
+deactivate SVC
+
+API --> WIDGET : {"response": "✅ Información guardada..."}
+deactivate API
+
+WIDGET --> USER : Muestra confirmación
+deactivate WIDGET
+
+@enduml
