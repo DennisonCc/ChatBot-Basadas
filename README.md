@@ -184,3 +184,32 @@ Para agregar o modificar conocimiento del bot, no toques el código Python. Simp
 ## 🤝 Contribución
 Las correcciones a la lógica de negocio deben hacerse directamente en los Markdowns. Las mejoras al "cerebro" (agente) se hacen en `app/infrastructure/agent/`.
 
+---
+
+## 🗺️ Roadmap Técnico (Evolución Enterprise)
+
+Actualmente, el sistema utiliza **Markdown (`.md`)** para gestion del conocimiento (ideal para demos). Para producción Enterprise, la arquitectura evolucionará hacia:
+
+### 1. Persistencia Robusta (SQL)
+- Migrar el feedback de usuarios (`corrections.md`) a una base de datos relacional (PostgreSQL).
+- **Tabla Feedback**: `id`, `user_id`, `suggestion_text`, `status` (PENDING, APPROVED), `created_at`.
+
+### 2. Validación Humana (Human-in-the-Loop)
+- Implementar un **Dashboard de Administración** para revisar sugerencias.
+- Nadie puede "envenenar" al bot; un administrador humano debe aprobar cada sugerencia.
+
+### 3. Búsqueda Vectorial (RAG Avanzado)
+- Una vez aprobada, la información se indexa en una **Base de Datos Vectorial** (Pinecone/pgvector).
+- El chatbot consulta esta base para obtener respuestas precisas en tiempo real.
+
+```mermaid
+graph LR
+    U[Usuario] -->|Feedback| API[API Gateway]
+    API -->|Insert| SQL[(PostgreSQL\nPending)]
+    ADMIN[Admin] -->|Review| DASH[Dashboard]
+    DASH -->|Approve| SQL
+    SQL -->|Trigger| WORKER[Worker]
+    WORKER -->|Embed| VEC[(Vector DB\nRAG)]
+    VEC -->|Context| BOT[Chatbot]
+```
+

@@ -127,6 +127,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
         }
     ]);
     const [inputValue, setInputValue] = useState<string>('');
+    const [showToast, setShowToast] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -165,6 +166,14 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
 
             const data = await response.json();
             setMessages(prev => [...prev, { text: data.response, isBot: true }]);
+
+            // Detect memory update confirmation
+            const memoryKeywords = ["guardada", "actualizado", "anotado"];
+            if (memoryKeywords.some(keyword => data.response.toLowerCase().includes(keyword))) {
+                setShowToast(true);
+                setTimeout(() => setShowToast(false), 3000);
+            }
+
         } catch (error) {
             setMessages(prev => [...prev, {
                 text: "⚠️ Parece que hay una interrupción con el servidor inteligente. Por favor, verifica la conexión.",
@@ -177,6 +186,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
 
     return (
         <div className={`premium-chatbot ${isOpen ? 'is-open' : ''}`}>
+            {/* ... launcher button ... */}
             <button className="launcher-btn" onClick={() => setIsOpen(!isOpen)}>
                 {isOpen ? (
                     <span className="close-icon">&times;</span>
@@ -190,7 +200,16 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
 
             {isOpen && (
                 <div className="chat-window">
+                    {/* MEMORY TOAST */}
+                    {showToast && (
+                        <div className="memory-toast">
+                            <span className="toast-icon">🧠</span>
+                            <span>Memoria Actualizada</span>
+                        </div>
+                    )}
+
                     <div className="chat-header">
+                        {/* ... header content ... */}
                         <div className="header-brand">
                             <div className="logo-container">
                                 <img src="/ai-logo.png" alt="Nexus AI" />
@@ -208,6 +227,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                     </div>
 
                     <div className="chat-body">
+                        {/* ... messages ... */}
                         {messages.map((msg, idx) => (
                             <div key={idx} className={`message-row ${msg.isBot ? 'bot' : 'user'}`}>
                                 {msg.isBot ? (
@@ -244,6 +264,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                     </div>
 
                     <div className="chat-footer">
+                        {/* ... footer content ... */}
                         <div className="input-wrapper">
                             <input
                                 type="text"
