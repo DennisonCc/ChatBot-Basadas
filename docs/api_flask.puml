@@ -1,0 +1,184 @@
+@startuml
+' Permitir mezclar clases y componentes
+allow_mixing
+
+!theme cyborg-outline
+
+' === ESTILOS VISUALES ===
+skinparam backgroundColor #0f172a
+skinparam defaultFontColor #f8fafc
+skinparam ArrowColor #22d3ee
+skinparam ComponentBorderColor #0ea5e9
+skinparam PackageBorderColor #0369a1
+skinparam ClassBorderColor #06b6d4
+skinparam DatabaseBorderColor #0891b2
+skinparam NoteFontColor #f8fafc
+skinparam NoteBackgroundColor #334155
+skinparam NoteBorderColor #94a3b8
+
+title Backend Flask API - Sistema de Control de Pausas\n<size:12>Port: 5000 | Python + Flask + SQLAlchemy</size>
+
+' ===================== CLIENTS =====================
+package "Clients" as CLIENTS #1e3a8a {
+    actor "Java Swing App" as JAVA #60a5fa
+    actor "Chatbot API" as BOT #818cf8
+    actor "Swagger UI" as SWAG #a5b4fc
+}
+
+' ===================== FLASK BACKEND =====================
+package "Flask Backend (:5000)" as FLASK #164e63 {
+
+    ' -------- PRESENTATION LAYER (TEAL) --------
+    package "Presentation Layer" as PRES #0d9488 {
+        component "App Factory\ncreate_app()" as FACTORY #14b8a6
+        component "CORS Middleware" as CORS #2dd4bf
+        component "Flasgger\nSwagger Config" as FLASG #5eead4
+
+        package "Blueprints" as BP_PKG #0f766e {
+            component "employee_bp\nGET /api/empleados" as EMP_BP #10b981
+            component "pause_bp" as PAUSE_BP #34d399
+        }
+
+        note bottom of PAUSE_BP
+            Endpoints:
+            GET    /api/pausas
+            GET    /api/pausas/fecha/{fecha}
+            POST   /api/pausas
+            PUT    /api/pausas/{id}
+            DELETE /api/pausas/{id}
+        end note
+    }
+
+    ' -------- SERVICE LAYER (VIOLET) --------
+    package "Service Layer (Business Logic)" as SVC #7c3aed {
+        class "EmployeeService" as EMP_SVC #8b5cf6 {
+            + get_all(): List[dict]
+        }
+
+        class "PauseService" as PAUSE_SVC #a78bfa {
+            + get_pausas(ci, fecha_inicio, fecha_fin)
+            + create_pausas(data): int
+            + update_pausa(id, data): bool
+            + delete_pausa(id): bool
+            --
+            - _validate_overlap(ci, fecha, h_inicio, h_fin)
+        }
+
+        class "ShiftService" as SHIFT_SVC #a78bfa {
+            + assign_shift(...)
+        }
+    }
+
+    ' -------- REPOSITORY LAYER (RED) --------
+    package "Repository Layer (Data Access)" as REPO #dc2626 {
+        class "EmployeeRepository" as EMP_REPO #ef4444 {
+            + get_all(): List[Employee]
+            + get_by_ci(ci): Employee
+        }
+
+        class "PauseRepository" as PAUSE_REPO #f87171 {
+            + get_filtered(): List[Pause]
+            + get_by_id(id): Pause
+            + get_by_employee_date(): List[Pause]
+            + create(data): Pause
+            + update(id, data): Pause
+            + delete(id): bool
+            + commit()
+        }
+
+        class "ShiftRepository" as SHIFT_REPO #f87171 {
+            + CRUD Operations
+        }
+    }
+
+    ' -------- MODELS (MAGENTA - CAMBIADO DE NARANJA) --------
+    ' Cambiado a tonos Magenta/Rosa oscuro para mejor contraste con letras blancas
+    package "Models (ORM)" as MDL #831843 {
+        class "Employee" as EMP_MDL #be185d {
+            ci : String (PK)
+            --
+            nombres
+            apellidos
+            direccion
+            telefonos
+            correo
+            fecha_nacimiento
+            fecha_ingreso
+            salario
+            --
+            + to_dict(): dict
+        }
+
+        class "Pause" as PAUSE_MDL #db2777 {
+            id_pausa : Integer (PK)
+            --
+            tipo_pausa
+            sub_tipo_pausa
+            empleado_pausa (FK)
+            fecha_pausa
+            hora_inicio_pausa
+            hora_fin_pausa
+            --
+            + to_dict(): dict
+        }
+
+        class "Turno" as SHIFT_MDL #db2777 {
+            id_turno : PK
+            hora_inicio
+            hora_fin
+        }
+
+        class "Receso" as BREAK_MDL #db2777 {
+            id_receso : PK
+            duracion
+            tipo
+        }
+
+        class "Firma" as SIGN_MDL #db2777 {
+            id_firma : PK
+            ingreso_jornada
+            salida_break
+        }
+    }
+}
+
+' ===================== DATABASE =====================
+database "PostgreSQL :5435" as PG #0891b2
+
+' ===================== RELATIONSHIPS =====================
+JAVA --> EMP_BP
+JAVA --> PAUSE_BP
+BOT --> EMP_BP
+BOT --> PAUSE_BP
+SWAG --> FACTORY
+
+FACTORY --> CORS
+FACTORY --> FLASG
+FACTORY --> BP_PKG
+
+EMP_BP --> EMP_SVC
+PAUSE_BP --> PAUSE_SVC
+
+EMP_SVC --> EMP_REPO
+PAUSE_SVC --> EMP_REPO
+PAUSE_SVC --> PAUSE_REPO
+
+EMP_REPO --> EMP_MDL
+PAUSE_REPO --> PAUSE_MDL
+SHIFT_REPO --> SHIFT_MDL
+
+EMP_MDL --> PG
+PAUSE_MDL --> PG
+SHIFT_MDL --> PG
+BREAK_MDL --> PG
+SIGN_MDL --> PG
+
+' ===================== NOTES =====================
+note top of FLASK
+    Arquitectura:
+    - Repository Pattern
+    - Service Layer Pattern
+    - Flask Blueprints
+    - OpenAPI / Swagger
+end note
+@enduml
