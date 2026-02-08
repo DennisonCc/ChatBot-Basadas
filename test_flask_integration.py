@@ -22,10 +22,11 @@ async def test_flask_integration():
     
     print(f"\nRespuesta del Bot:\n{response}")
     
-    if "Juan Mock" in response or "Maria Mock" in response:
-        print("\n✅ ÉXITO: El chatbot consultó exitosamente la Flask API y recuperó los datos.")
+    if "YANET" in response or "ANDRES" in response or "DAVID" in response:
+        print("\n✅ ÉXITO: El chatbot consultó exitosamente la Flask API y recuperó los datos REALES.")
     else:
-        print("\n❌ FALLO: El chatbot no parece haber consultado o entendido los datos de la Flask API.")
+        print("\n❌ FALLO: El chatbot no parece haber recuperado los datos reales de la base de datos.")
+
 
 if __name__ == "__main__":
     asyncio.run(test_flask_integration())

@@ -19,7 +19,7 @@ title 💬 Flujo de Conversación del Chatbot\n<size:11>FastAPI + Pydantic AI + 
 
 actor "👤 Usuario" as USER #3b82f6
 participant "📱 ChatbotWidget\n(Next.js)" as WIDGET #60a5fa
-participant "🛣️ FastAPI\n/chat endpoint" as API #f59e0b
+participant "🛣️ FastAPI\n/chat endpoint" as API #4f46e5
 participant "💬 ChatService" as SVC #22c55e
 participant "🤖 PydanticAgent" as AGENT #8b5cf6
 participant "☁️ NVIDIA NIM\nLlama 3" as NVIDIA #10b981

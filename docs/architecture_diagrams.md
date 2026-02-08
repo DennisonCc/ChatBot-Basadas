@@ -9,7 +9,7 @@ Este documento contiene diagramas visuales de la arquitectura del **Chatbot** y 
 ## 📐 Diagrama en Mermaid - Arquitectura Clean del Chatbot
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#6366f1', 'primaryTextColor': '#fff', 'primaryBorderColor': '#4338ca', 'lineColor': '#a855f7', 'secondaryColor': '#f1f5f9', 'tertiaryColor': '#fef3c7', 'background': '#0f172a', 'mainBkg': '#1e293b', 'nodeBorder': '#6366f1'}}}%%
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#6366f1', 'primaryTextColor': '#fff', 'primaryBorderColor': '#4338ca', 'lineColor': '#a855f7', 'secondaryColor': '#f1f5f9', 'tertiaryColor': '#6366f1', 'background': '#0f172a', 'mainBkg': '#1e293b', 'nodeBorder': '#6366f1'}}}%%
 
 graph TB
     subgraph FRONTEND["🖥️ FRONTEND (Next.js/React)"]
@@ -63,9 +63,7 @@ graph TB
     end
 
     %% Conexiones Frontend
-    %% Conexiones Frontend
     CW <-->|"HTTP POST /chat"| ROUTES
-    URES --> CW
     URES --> CW
 
     %% Flujo principal
@@ -86,10 +84,10 @@ graph TB
     CTX_LOADER -->|"📖 Lee"| KB
     CONFIG -->|"📖 Lee"| ENV[".env"]
 
-    %% Estilos
+    %% Estilos (Eliminando amarillo por azul/indigo para mejor legibilidad)
     classDef frontend fill:#3b82f6,stroke:#1e40af,color:#fff
-    classDef interfaces fill:#f59e0b,stroke:#d97706,color:#000
-    classDef application fill:#22c55e,stroke:#15803d,color:#fff
+    classDef interfaces fill:#4f46e5,stroke:#3730a3,color:#fff
+    classDef application fill:#10b981,stroke:#065f46,color:#fff
     classDef domain fill:#8b5cf6,stroke:#6d28d9,color:#fff
     classDef infrastructure fill:#ec4899,stroke:#be185d,color:#fff
     classDef external fill:#06b6d4,stroke:#0891b2,color:#fff
@@ -295,12 +293,12 @@ sequenceDiagram
 ## 📐 Diagrama en Mermaid - API Flask (Pausas)
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#0ea5e9', 'primaryTextColor': '#fff', 'primaryBorderColor': '#0369a1', 'lineColor': '#22d3ee', 'secondaryColor': '#f1f5f9', 'tertiaryColor': '#fef3c7', 'background': '#0c4a6e', 'mainBkg': '#164e63'}}}%%
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#0ea5e9', 'primaryTextColor': '#fff', 'primaryBorderColor': '#0369a1', 'lineColor': '#22d3ee', 'secondaryColor': '#f1f5f9', 'tertiaryColor': '#0ea5e9', 'background': '#0c4a6e', 'mainBkg': '#164e63'}}}%%
 
 graph TB
     subgraph CLIENTS["👥 CLIENTES"]
-        JAVA["☕ Sistema Java Swing<br/>(Frontend Principal)"]
-        CHATBOT["🤖 Chatbot (FastAPI)<br/>:7842"]
+        REACT["⚛️ Web App (React/Next.js)"]
+        CHAT_UI["🤖 Chatbot Widget"]
         SWAGGER["📖 Swagger UI<br/>/apidocs/"]
     end
 
@@ -344,10 +342,8 @@ graph TB
     end
 
     %% Conexiones de clientes
-    JAVA <-->|"HTTP REST"| EMP_BP
-    JAVA <-->|"HTTP REST"| PAUSE_BP
-    CHATBOT <-->|"HTTP REST"| EMP_BP
-    CHATBOT <-->|"HTTP REST"| PAUSE_BP
+    REACT <-->|"HTTP REST"| BLUEPRINTS
+    CHAT_UI <-->|"HTTP REST"| BLUEPRINTS
     SWAGGER <-->|"Interactive Docs"| APP
 
     %% Flujo interno
@@ -377,15 +373,15 @@ graph TB
     BREAK_MODEL <--> PG
     SIGN_MODEL <--> PG
 
-    %% Estilos
+    %% Estilos corregidos (Sin amarillo)
     classDef client fill:#3b82f6,stroke:#1e40af,color:#fff
-    classDef presentation fill:#f59e0b,stroke:#d97706,color:#000
-    classDef service fill:#22c55e,stroke:#15803d,color:#fff
+    classDef presentation fill:#4f46e5,stroke:#3730a3,color:#fff
+    classDef service fill:#10b981,stroke:#065f46,color:#fff
     classDef repository fill:#8b5cf6,stroke:#6d28d9,color:#fff
     classDef model fill:#ec4899,stroke:#be185d,color:#fff
     classDef database fill:#06b6d4,stroke:#0891b2,color:#fff
 
-    class JAVA,CHATBOT,SWAGGER client
+    class REACT,CHAT_UI,SWAGGER client
     class APP,CORS_MW,SWAGGER_CFG,EMP_BP,PAUSE_BP presentation
     class EMP_SVC,PAUSE_SVC service
     class EMP_REPO,PAUSE_REPO repository
@@ -630,8 +626,8 @@ graph LR
 
 graph TB
     subgraph FRONTEND["🖥️ CAPA DE PRESENTACIÓN"]
-        JAVA_APP["☕ Aplicación Java Swing<br/>(Sistema Principal de RRHH)"]
-        NEXT_APP["⚛️ Next.js Demo<br/>(ChatbotWidget)"]
+        WEB_APP["⚛️ Web App (React/Next.js)"]
+        NEXT_APP["🤖 ChatbotWidget (Sidebar)"]
     end
 
     subgraph SERVICES["🔧 CAPA DE SERVICIOS"]
@@ -657,7 +653,7 @@ graph TB
     end
 
     %% Conexiones
-    JAVA_APP <-->|"REST API"| FLASK
+    WEB_APP <-->|"REST API"| FLASK
     NEXT_APP <-->|"REST API"| FAST
     
     FAST --> PYDANTIC
@@ -669,14 +665,14 @@ graph TB
     FLASK --> SWAGGER
     ORM <--> POSTGRES
 
-    %% Estilos
+    %% Estilos corregidos (Eliminando amarillos para mejor contraste)
     classDef frontend fill:#3b82f6,stroke:#1e40af,color:#fff
     classDef chatbot fill:#8b5cf6,stroke:#6d28d9,color:#fff
-    classDef flask fill:#0ea5e9,stroke:#0369a1,color:#fff
+    classDef flask fill:#10b981,stroke:#065f46,color:#fff
     classDef ai fill:#22c55e,stroke:#15803d,color:#fff
-    classDef data fill:#f59e0b,stroke:#d97706,color:#000
+    classDef data fill:#0ea5e9,stroke:#0369a1,color:#fff
 
-    class JAVA_APP,NEXT_APP frontend
+    class WEB_APP,NEXT_APP frontend
     class FAST,PYDANTIC,KB chatbot
     class FLASK,SWAGGER,ORM flask
     class NVIDIA ai

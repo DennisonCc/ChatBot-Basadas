@@ -52,19 +52,20 @@ Implementaciones concretas de las interfaces del dominio.
 ## 📊 Diagrama de Arquitectura Unificado (Triple Memoria)
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#6366f1', 'primaryTextColor': '#fff', 'lineColor': '#a855f7', 'background': '#0f172a', 'mainBkg': '#1e293b'}}}%%
 graph TD
-    subgraph Frontend Layer
-        W[Chatbot Widget]
+    subgraph Frontend_Layer["🖥️ Capa de Presentación"]
+        W["📱 Chatbot Widget<br/>(React/Next.js)"]
     end
 
-    subgraph Chatbot_Engine
-        R[API Routes] --> SVC[ChatService]
-        SVC --> AGENT[Pydantic Agent]
+    subgraph Chatbot_Engine["🤖 Chatbot Core (FastAPI)"]
+        R["🛣️ API Routes"] --> SVC["💬 ChatService"]
+        SVC --> AGENT["🧠 Pydantic Agent"]
         
-        subgraph Memory_Stack
-            IMM[System Prompt: Immediate]
-            SESS[Session History: Short-term]
-            RAG[Vector Store: Long-term]
+        subgraph Memory_Stack["📚 Triple Memoria"]
+            IMM["⚡ Inmediata<br/>(System Prompt)"]
+            SESS["🕒 Sesión<br/>(Historial RAM)"]
+            RAG["🗄️ Larga Duración<br/>(Vector Store)"]
         end
         
         AGENT --> IMM
@@ -72,10 +73,24 @@ graph TD
         AGENT <--> RAG
     end
 
-    subgraph External_AI
-        NVIDIA["🟢 NVIDIA NIM API"]
+    subgraph External_AI["☁️ IA Externa"]
+        NVIDIA["🟢 NVIDIA NIM API<br/>(Meta Llama)"]
+    end
+
+    subgraph Backend_Data["🔵 Backend & Datos"]
+        FLASK["🔗 Flask API<br/>(Python)"]
+        DB[("🐘 PostgreSQL<br/>(Real DB)")]
     end
 
     W <--> R
     AGENT <--> NVIDIA
+    AGENT <--> FLASK
+    FLASK <--> DB
+
+    %% Estilos
+    style W fill:#3b82f6,stroke:#1e40af,color:#fff
+    style AGENT fill:#8b5cf6,stroke:#6d28d9,color:#fff
+    style NVIDIA fill:#10b981,stroke:#065f46,color:#fff
+    style FLASK fill:#0ea5e9,stroke:#0369a1,color:#fff
+    style DB fill:#1e293b,stroke:#6366f1,color:#fff
 ```

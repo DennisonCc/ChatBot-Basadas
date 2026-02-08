@@ -1,16 +1,16 @@
 # 🧠 SmartHR AI Chatbot - Unified Knowledge System
 
-> **Asistente Inteligente Unificado para el Sistema de Gestión de Personal (Java Swing)**
+> **Asistente Inteligente Unificado para el Sistema de Gestión de Personal (Web/React)**
 
-Este proyecto implementa un **Chatbot Contextual Avanzado** diseñado para actuar como la capa de soporte y consulta inteligente del ecosistema **SmartHR**. A diferencia de un chatbot genérico, este asistente tiene conocimiento profundo y técnico sobre la lógica interna de la aplicación de escritorio Java, incluyendo reglas de negocio, validaciones de formularios y estructuras de base de datos.
+Este proyecto implementa un **Chatbot Contextual Avanzado** diseñado para actuar como la capa de soporte y consulta inteligente del ecosistema **SmartHR**. A diferencia de un chatbot genérico, este asistente tiene conocimiento profundo y técnico sobre la lógica interna de la aplicación, incluyendo reglas de negocio, validaciones de formularios y estructuras de base de datos.
 
 ## 🚀 Características Principales
 
 ### 1. Conocimiento Técnico Profundo
-El chatbot no solo responde preguntas generales, sino que entiende la **arquitectura interna** del sistema Java:
-*   **Pantallas Java Swing**: Conoce al detalle pantallas como `BaseFirma`, `Personal`, `PausasActivas`, `Turnos`, etc.
-*   **Lógica de Negocio**: Sabe, por ejemplo, que al guardar un empleado los nombres se convierten a MAYÚSCULAS o cómo el sistema auto-completa firmas olvidadas.
-*   **Base de Datos**: Entiende la relación entre modelos Java (`Personals`, `Turnos`) y tablas PostgreSQL (`empleado`, `turno`).
+El chatbot no solo responde preguntas generales, sino que entiende la **arquitectura interna** del sistema:
+*   **Interfaces React/Next.js**: Conoce al detalle componentes como `ChatbotWidget`, dashboard de `Turnos`, `Asistencia`, etc.
+*   **Lógica de Negocio**: Sabe, por ejemplo, que al guardar un empleado los nombres se convierten a MAYÚSCULAS o cómo el sistema gestiona los solapamientos de pausas.
+*   **Base de Datos**: Entiende la relación entre modelos Pydantic (`Employee`, `Pause`) y tablas PostgreSQL (`empleado`, `pausas`).
 
 ### 2. Arquitectura Modular de Conocimiento
 La inteligencia del bot se basa en archivos Markdown estructurados en `knowledge/modules/`, actuando como una "Single Source of Truth":
@@ -109,7 +109,7 @@ sequenceDiagram
     Note over CW: Muestra Toast: 🧠 Memoria Actualizada
 ```
 
-> 📊 **Ver más diagramas**: Puedes consultar la documentación visual completa en [docs/chatbot_architecture.puml](docs/chatbot_architecture.puml).
+> 📊 **Ver más diagramas**: Puedes consultar la documentación visual completa en [docs/architecture_diagrams.md](docs/architecture_diagrams.md).
 
 ---
 
