@@ -55,3 +55,7 @@ yarn-error.log*
 pnpm-debug.log*
 .vercel/
 
+# Databases & Vector Stores
+chatbot.db
+vector_db/
+

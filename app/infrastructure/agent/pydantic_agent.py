@@ -1,6 +1,5 @@
 from pydantic_ai import Agent, RunContext
 from pydantic_ai.models.openai import OpenAIModel
-from pydantic_ai.providers.openai import OpenAIProvider
 from app.domain.interfaces import IChatAgent, IBackendGateway
 from app.infrastructure.common.config import config
 import logfire
@@ -15,12 +14,12 @@ class PydanticChatAgent(IChatAgent):
         # Load system prompt from modular markdown files (including user corrections)
         self.SYSTEM_PROMPT = loader.load_full_context("main.md")
         
-        # Initialize Provider and Model
-        provider = OpenAIProvider(
+        # Initialize Model directly with NVIDIA endpoint
+        model = OpenAIModel(
+            config.MODEL_NAME,
             base_url="https://integrate.api.nvidia.com/v1",
             api_key=config.NVIDIA_API_KEY,
         )
-        model = OpenAIModel(config.MODEL_NAME, provider=provider)
 
         self.agent = Agent(
             model,
@@ -32,6 +31,7 @@ class PydanticChatAgent(IChatAgent):
         self._register_tools()
 
     def _register_tools(self):
+        # ... (same tool registration as before)
         @self.agent.tool
         async def list_employees(ctx: RunContext[IBackendGateway]) -> str:
             """Obtiene la lista de todos los empleados desde el backend Flask."""
@@ -87,8 +87,10 @@ class PydanticChatAgent(IChatAgent):
             else:
                 return f"❌ Error al guardar: {result.message}"
 
-    async def get_response(self, message: str, current_screen: str = "Principal") -> str:
-        # Búsqueda Semántica Real (RAG)
+    async def get_response(self, message: str, current_screen: str = "Principal", session_id: str = "default") -> str:
+        from app.application.session_service import session_history_service
+        
+        # 1. Búsqueda Semántica Real (RAG)
         additional_context = ""
         try:
             search_results = vector_store.query_similar(message, n_results=2)
@@ -100,6 +102,24 @@ class PydanticChatAgent(IChatAgent):
         except Exception as e:
             print(f"[RAG ERROR] {e}")
 
+        # 2. Preparar el mensaje con contexto actual
         full_message = f"[PANTALLA: {current_screen}]\n{additional_context}\nUsuario: {message}"
-        result = await self.agent.run(full_message, deps=self.backend_gateway)
-        return result.output
+        
+        # 3. Recuperar historial de la sesión desde SQL (Memoria Persistente)
+        history = session_history_service.get_session_history(session_id)
+        
+        # 4. Ejecutar el agente con historial
+        print(f"[SESSION] Cargados {len(history)} mensajes de historial para sesión: {session_id}")
+        result = await self.agent.run(
+            full_message, 
+            deps=self.backend_gateway,
+            message_history=history
+        )
+        
+        # 5. Persistir el intercambio actual en SQL
+        # Guardamos el mensaje del usuario (el formateado con contexto)
+        session_history_service.save_message(session_id, 'user', message)
+        # Guardamos la respuesta del modelo
+        session_history_service.save_message(session_id, 'model', result.data)
+        
+        return result.data

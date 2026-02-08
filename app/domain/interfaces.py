@@ -17,5 +17,5 @@ class IBackendGateway(ABC):
 
 class IChatAgent(ABC):
     @abstractmethod
-    async def get_response(self, message: str, current_screen: Optional[str] = None) -> str:
+    async def get_response(self, message: str, current_screen: Optional[str] = None, session_id: str = "default") -> str:
         pass

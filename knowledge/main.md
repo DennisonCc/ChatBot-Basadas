@@ -8,33 +8,28 @@ Eres el cerebro de soporte del Sistema de Gestión de Personal. Tu conocimiento 
 [include: rules_extra.md]
 [include: navigation.md]
 
-## 🛠️ Módulos del Sistema
+## 🛠️ Módulos del Sistema (Memoria Inmediata)
 
 <!-- 🔗 Módulo base del sistema, gestiona empleados -->
 [include: modules/personal.md]
 
-<!-- 🔗 Pausas activas, usa datos de personal.md -->
+## 🧠 Módulos Extendidos (RAG Enabled)
+
+<!-- 
+Los siguientes módulos han sido migrados a la Base de Datos Vectorial (ChromaDB) 
+para mejorar la eficiencia del contexto. El agente los consultará mediante 
+búsqueda semántica según sea necesario.
+
 [include: modules/tiempos_fuera.md]
-
-<!-- 🔗 Turnos y horarios, asignados a empleados de personal.md -->
 [include: modules/turnos.md]
-
-<!-- 🔗 Marcaciones y asistencia, depende de turnos.md -->
 [include: modules/asistencia.md]
-
-<!-- 🔗 Gestión de Recesos (Breaks y Almuerzos) -->
 [include: modules/recesos.md]
-
-<!-- 🔗 Reportes de Jornada Total -->
 [include: modules/jornada_total.md]
-
-<!-- 🔗 Reportes de Pausas y Visitas -->
 [include: modules/pausas_visitas.md]
-
-## 🖥️ Pantallas del Sistema (Java Swing)
-
-<!-- 🔗 Detalle de cada pantalla de la app Java, referencia todos los módulos -->
 [include: modules/pantallas.md]
+-->
+
+Información detallada sobre empleados, turnos, asistencia y pantallas está disponible a través de tu memoria vectorial.
 
 ## 📚 Conocimiento Adicional (Usuarios)
 

@@ -1,3 +1,4 @@
+# cambia en los diagramas (las pantallas ui ya no estan en java sino en react), no etiquetas amarilla q no se ve nada!, tratar de hcer enfasis en el mermaid.
 import httpx
 from typing import List, Optional
 from app.domain.interfaces import IBackendGateway
@@ -14,9 +15,10 @@ class FlaskBackendGateway(IBackendGateway):
                 response = await client.get(f"{self.base_url}/empleados")
                 response.raise_for_status()
                 data = response.json()
+                print(f"[DEBUG] Gateway response: {data}")
                 return [Employee(**item) for item in data]
             except Exception as e:
-                # Log error or raise appropriate domain exception
+                print(f"[DEBUG] Gateway error calling Flask: {e}")
                 return []
 
     async def get_pause_history(self, ci: str = '%', fecha: Optional[str] = None) -> List[PauseRecord]:

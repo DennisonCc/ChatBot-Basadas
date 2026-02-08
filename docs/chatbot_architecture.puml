@@ -1,136 +1,149 @@
-@startuml Chatbot_Clean_Architecture
-skinparam backgroundColor #0f172a
-skinparam defaultFontColor #f8fafc
-skinparam ArrowColor #a855f7
-skinparam ComponentBackgroundColor #1e293b
-skinparam PackageBackgroundColor #0f172a
-skinparam InterfaceBackgroundColor #0f172a
-skinparam NoteBackgroundColor #1e293b
-skinparam DatabaseBackgroundColor #1e293b
-skinparam CloudBackgroundColor #1e293b
-skinparam FolderBackgroundColor #1e293b
-skinparam CardBackgroundColor #1e293b
-skinparam FileBackgroundColor #1e293b
-skinparam backgroundColor #0f172a
-skinparam defaultFontColor #f8fafc
-skinparam ArrowColor #a855f7
-skinparam ComponentBorderColor #6366f1
-skinparam PackageBorderColor #4338ca
-skinparam ClassBorderColor #8b5cf6
-skinparam InterfaceBorderColor #22c55e
-skinparam NoteFontColor #0f172a
+@startuml
+!theme plain
+skinparam backgroundColor #0a0e1a
+skinparam defaultFontColor #e2e8f0
+skinparam defaultFontSize 11
+skinparam shadowing false
 
-title 🤖 Chatbot Support System - Clean Architecture\n<size:12>Port: 7842 | Python + FastAPI + Pydantic AI</size>
-
-' === FRONTEND ===
-package "🖥️ Frontend (Next.js)" as FRONTEND #1e3a5f {
-    component "📱 ChatbotWidget.tsx" as CW #3b82f6
-    component "🎨 CSS/Styling" as CSS #60a5fa
+skinparam package {
+    BackgroundColor #1e293b
+    BorderColor #6366f1
+    BorderThickness 3
+    FontSize 13
+    FontStyle bold
+    FontColor #a5b4fc
 }
 
-' === CHATBOT API ===
-package "🤖 Chatbot API (FastAPI :7842)" as CHATBOT #1e293b {
+skinparam component {
+    BackgroundColor #334155
+    BorderColor #818cf8
+    BorderThickness 2
+    FontColor #e2e8f0
+    RoundCorner 10
+}
+
+skinparam interface {
+    BackgroundColor #064e3b
+    BorderColor #34d399
+    BorderThickness 2
+    FontColor #d1fae5
+}
+
+skinparam database {
+    BackgroundColor #581c87
+    BorderColor #c084fc
+    BorderThickness 2
+    FontColor #e9d5ff
+}
+
+skinparam cloud {
+    BackgroundColor #0c4a6e
+    BorderColor #38bdf8
+    BorderThickness 2
+    FontColor #bae6fd
+}
+
+skinparam storage {
+    BackgroundColor #92400e
+    BorderColor #fb923c
+    BorderThickness 2
+    FontColor #fed7aa
+}
+
+skinparam note {
+    BackgroundColor #1e3a8a
+    BorderColor #60a5fa
+    FontColor #dbeafe
+}
+
+skinparam arrow {
+    Color #8b5cf6
+    Thickness 2
+}
+
+title <size:16>Chatbot Architecture - Triple Memory System</size>
+
+package "PRESENTATION LAYER" {
+    component "Chatbot Widget" as Widget #4f46e5
+}
+
+package "APPLICATION LAYER" {
+    component "API Routes" as Routes
+    component "Chat Service" as ChatService
+}
+
+package "DOMAIN LAYER" {
+    interface "IChatAgent" as IAgent
+    interface "IBackendGateway" as IGateway
+}
+
+package "INFRASTRUCTURE LAYER" {
     
-    ' INTERFACES
-    package "🔌 Interfaces Layer" as INTERFACES #f59e0b/fcd34d {
-        component "🛣️ API Routes\n/chat\n/feedback\n/health" as ROUTES #f59e0b
-        component "💉 Depends()\nDI Container" as DI #fbbf24
+    package "Agent & Memory" {
+        component "Pydantic Agent" as Agent
+        component "Session History" as History
+        component "Vector Store" as VectorStore
     }
     
-    ' APPLICATION
-    package "📋 Application Layer" as APPLICATION #22c55e/4ade80 {
-        component "💬 ChatService\norchestrates flow" as CHAT_SVC #22c55e
-        component "📝 FeedbackService\nsaves corrections" as FEED_SVC #4ade80
+    package "Data Persistence" {
+        database "SQLite" as SQLite
+        database "ChromaDB" as ChromaDB
     }
     
-    ' DOMAIN
-    package "🎯 Domain Layer (Core)" as DOMAIN #8b5cf6/a78bfa {
-        interface "IChatAgent" as IAGENT #8b5cf6
-        interface "IBackendGateway" as IGW #a78bfa
-        
-        class "📦 Models" as MODELS #7c3aed {
-            + ChatRequest
-            + ChatResponse
-            + Employee
-            + PauseRecord
-            + FeedbackRequest
-            --
-            + Turno (Shift)
-            + Receso (Break)
-            + Firma (Attendance)
-            + Area (Department)
-        }
-    }
-    
-    ' INFRASTRUCTURE
-    package "⚙️ Infrastructure Layer" as INFRASTRUCTURE #ec4899/f472b6 {
-        
-        package "🧠 Agent" as AGENT_PKG #db2777 {
-            component "🤖 PydanticChatAgent\n(Pydantic AI)" as AGENT #ec4899
-            
-            note right of AGENT
-                **Available Tools:**
-                🔧 list_employees()
-                🔧 get_pause_history()
-                🔧 check_backend_health()
-                🔧 get_navigation_guide()
-                🔧 save_user_feedback()
-            end note
-        }
-        
-        package "🌐 External" as EXT_PKG #be185d {
-            component "🔗 FlaskBackendGateway\nHTTP Client (httpx)" as FLASK_GW #f472b6
-        }
-        
-        package "📁 Common" as COMMON_PKG #9d174d {
-            component "⚙️ Config\n(.env loader)" as CONFIG #f9a8d4
-            component "📄 ContextLoader\n(Markdown KB)" as CTX #fce7f3
-        }
+    package "External Access" {
+        component "Flask Gateway" as Gateway
     }
 }
 
-' === EXTERNAL SERVICES ===
-package "☁️ External Services" as EXTERNAL #0891b2/22d3ee {
-    cloud "🟢 NVIDIA NIM\nLlama 3 API" as NVIDIA #22d3ee
-    database "🔵 Flask API\n:5000" as FLASK_API #06b6d4
-    storage "📚 Knowledge Base\n/knowledge/*.md" as KB #0ea5e9
-    file ".env" as ENV #38bdf8
+package "EXTERNAL SERVICES" {
+    cloud "Nvidia NIM\nLLM Service" as NvidiaLLM
+    database "Flask API" as FlaskAPI
+    storage "Knowledge Base\nMarkdown Files" as KB
 }
 
-' === RELATIONSHIPS ===
-' === DATABASE ===
-database "🐘 PostgreSQL :5435\n(Migrado)" as POSTGRES #f59e0b 
+Widget -down-> Routes : HTTP
+Routes -down-> ChatService
+ChatService -down-> IAgent : uses
 
-' === RELATIONSHIPS ===
-CW <--> ROUTES : HTTP POST /chat
+Agent .up.|> IAgent : implements
+Gateway .up.|> IGateway : implements
 
-FLASK_API <--> POSTGRES : SQL
+Agent -right-> History : 1. Session Memory
+Agent -down-> VectorStore : 2. RAG Memory
+Agent -down-> NvidiaLLM : Inference
 
-CSS .. CW
+History -down-> SQLite : stores
+VectorStore -down-> ChromaDB : queries
+VectorStore -right-> NvidiaLLM : Embeddings
 
-ROUTES --> DI
-ROUTES --> FEED_SVC
-DI --> CHAT_SVC : inject
+Gateway -down-> FlaskAPI
 
-CHAT_SVC --> IAGENT : depends on
-AGENT ..|> IAGENT : <<implements>>
-FLASK_GW ..|> IGW : <<implements>>
-
-AGENT --> NVIDIA : 🌐 LLM API
-AGENT --> IGW : uses
-FLASK_GW --> FLASK_API : 🌐 HTTP
-
-CTX --> KB : 📖 reads
-CONFIG --> ENV : 📖 reads
-
-' === NOTES ===
-note top of CHATBOT
-    **Principios SOLID:**
-    ✅ SRP: Cada clase tiene una sola responsabilidad
-    ✅ OCP: Abierto a extensión (nuevos Gateways)
-    ✅ LSP: Interfaces intercambiables
-    ✅ ISP: Interfaces específicas
-    ✅ DIP: Alto nivel depende de abstracciones
+note right of Agent
+  <b>IMMEDIATE MEMORY</b>
+  System Prompt
+  Critical Rules
+  Current Context
 end note
+
+note bottom of History
+  <b>SHORT-TERM MEMORY</b>
+  Last 10 messages
+  Active conversation
+  Thread context
+end note
+
+note bottom of VectorStore
+  <b>LONG-TERM MEMORY (RAG)</b>
+  Knowledge retrieval
+  Semantic search
+  Document chunks
+end note
+
+legend bottom left
+  <b>MEMORY FLOW</b>
+  1. Immediate - System instructions
+  2. Session - Conversation history
+  3. RAG - Knowledge base
+endlegend
 
 @enduml

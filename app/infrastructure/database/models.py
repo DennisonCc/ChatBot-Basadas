@@ -24,3 +24,23 @@ class Feedback(SQLModel, table=True):
     status: str = Field(default="APPROVED")  # PENDING_REVIEW, APPROVED, REJECTED
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
+
+class KnowledgeSource(SQLModel, table=True):
+    """
+    Registro de archivos Markdown migrados a RAG.
+    """
+    id: Optional[int] = Field(default=None, primary_key=True)
+    filename: str = Field(index=True, unique=True)
+    indexed_at: datetime = Field(default_factory=datetime.now)
+    chunk_count: int
+    status: str = Field(default="INDEXED")
+
+class SessionMessage(SQLModel, table=True):
+    """
+    Persistencia de historial de conversación (Memoria Inmediata de Sesión).
+    """
+    id: Optional[int] = Field(default=None, primary_key=True)
+    session_id: str = Field(index=True)
+    role: str  # 'user' o 'model'
+    content: str
+    timestamp: datetime = Field(default_factory=datetime.now)

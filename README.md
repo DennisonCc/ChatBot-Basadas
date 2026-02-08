@@ -18,108 +18,98 @@ La inteligencia del bot se basa en archivos Markdown estructurados en `knowledge
 *   `turnos.md`, `personal.md`: Reglas de negocio específicas por módulo.
 *   `main.md`: Orquestador que integra todos los conocimientos.
 
-### 3. Aprendizaje Orgánico (Feedback Loop)
-El sistema puede **aprender de los usuarios**. Si un operador corrige al bot (ej: "El turno nocturno ahora empieza a las 22:00"), el sistema puede validar y registrar esta corrección en `user_feedback/corrections.md` sin alterar la base de conocimiento central, priorizando esta nueva información en futuras consultas.
+### 3. Sistema de Memoria de Triple Capa (Hybrid RAG+)
+El sistema utiliza una arquitectura de memoria avanzada para garantizar precisión y coherencia:
+*   **Capa 1: Memoria Inmediata (System Prompt)**: Las reglas críticas y la lógica de Personal (`personal.md`) residen directamente en el prompt para una respuesta instantánea y sin errores.
+*   **Capa 2: Memoria de Sesión (Short-term)**: El agente recuerda el hilo de la conversación actual (últimos 10 mensajes), permitiendo preguntas de seguimiento y contexto dinámico.
+*   **Capa 3: Memoria Vectorial (RAG - ChromaDB)**: El conocimiento técnico masivo se recupera bajo demanda mediante búsqueda semántica usando `nvidia/nv-embedqa-e5-v5`.
+
+### 4. Aprendizaje Orgánico (Feedback Loop)
+El sistema puede **aprender de los usuarios** en tiempo real. Si un operador corrige al bot, el sistema valida, indexa vectorialmente y persiste la corrección en **SQLite** y **ChromaDB**, priorizándola en consultas futuras.
 
 ---
 
 ## 🛠️ Stack Tecnológico
 
-*   **Core AI**: Python + [Pydantic AI](https://ai.pydantic.dev/) (Agentes Inteligentes).
-*   **Backend API**: FastAPI (Alto rendimiento, asíncrono).
-*   **Frontend**: Next.js 14 + TailwindCSS (Interfaz moderna tipo Dashboard).
-*   **Integración**: Mapeo lógico con sistema Legacy Java Swing.
+*   **Core AI & Orquestación**: Python + [Pydantic AI](https://ai.pydantic.dev/).
+*   **Modelos LLM/Embeddings**: **NVIDIA NIM** (Llama 3.3 70B & nv-embedqa-e5-v5).
+*   **Bases de Datos**: 
+    *   **ChromaDB**: Almacenamiento vectorial (RAG).
+    *   **SQLite (SQLModel)**: Auditoría de feedback y metadatos.
+*   **Backend API**: FastAPI.
+*   **Frontend**: Next.js 14 + TailwindCSS.
 
 ---
 
 ## 🏗️ Arquitectura del Sistema
 
-### Diagrama de Integración Global
-Este diagrama muestra cómo interactúan el frontend (Next.js), el chatbot (FastAPI + Pydantic AI), la API heredada (Flask) y la base de datos.
+### Diagrama de Memoria Triple
+Este diagrama muestra cómo el Agente interactúa con sus diferentes niveles de memoria y servicios externos.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': { 'primaryColor': '#818cf8', 'lineColor': '#a855f7'}}}%%
 
 graph TB
-    subgraph FRONTEND["🖥️ CAPA DE PRESENTACIÓN"]
-        JAVA_APP["☕ Aplicación Java Swing<br/>(Sistema Principal de RRHH)"]
-        NEXT_APP["⚛️ Next.js Demo<br/>(ChatbotWidget)"]
+    subgraph FRONTEND["🖥️ FRONTEND"]
+        NEXT_APP["⚛️ Next.js Chatbot"]
     end
 
-    subgraph SERVICES["🔧 CAPA DE SERVICIOS"]
-        subgraph CHATBOT_SVC["🤖 Chatbot Service (:7842)"]
-            FAST["FastAPI"]
-            PYDANTIC["Pydantic AI Agent"]
-            KB["📚 Knowledge Base<br/>/knowledge/*.md"]
+    subgraph CHATBOT_SVC["🤖 CHATBOT API (:7842)"]
+        FAST["FastAPI"]
+        
+        subgraph AGENT_BRAIN["🧠 CEREBRO DEL AGENTE"]
+            AGENT["Pydantic Agent"]
+            MEM_IMM["📜 Memoria Inmediata<br/>(Rules & Core KB)"]
+            MEM_SESS["📝 Memoria de Sesión<br/>(Historial 10 msgs)"]
         end
         
-        subgraph FLASK_SVC["🔵 Flask API (:5000)"]
-            FLASK["Flask App"]
-            SWAGGER["Swagger Docs"]
-            ORM["SQLAlchemy ORM"]
+        subgraph DATA_STORAGE["🗄️ PERSISTENCIA"]
+            SQL[(🗄️ SQLite)]
+            CHROMA[(🧠 ChromaDB RAG)]
         end
     end
 
-    subgraph AI["☁️ SERVICIOS IA"]
-        NVIDIA["🟢 NVIDIA NIM<br/>Llama 3.3 70B"]
-    end
-
-    subgraph DATA["🗄️ CAPA DE DATOS"]
-        POSTGRES[("🐘 PostgreSQL<br/>:5435<br/>━━━━━━━<br/>📁 empleado<br/>📁 pausas")]
+    subgraph CLOUD["☁️ AI SERVICES (NVIDIA NIM)"]
+        LLM["🟢 LLM Inferencia"]
+        EMBED["💎 Embeddings"]
     end
 
     %% Conexiones
-    JAVA_APP <-->|"REST API"| FLASK
-    NEXT_APP <-->|"REST API"| FAST
+    NEXT_APP <--> FAST
+    FAST --> AGENT
     
-    FAST --> PYDANTIC
-    PYDANTIC --> KB
-    PYDANTIC <-->|"Tool Calls"| FLASK
-    PYDANTIC <-->|"LLM API"| NVIDIA
+    %% RAG Flow
+    AGENT <--> CHROMA
+    AGENT <--> MEM_SESS
+    AGENT --> MEM_IMM
     
-    FLASK --> ORM
-    FLASK --> SWAGGER
-    ORM <--> POSTGRES
+    %% AI Flow
+    AGENT --> LLM
+    AGENT --> EMBED
 ```
 
-### Flujo de Conversación y Feedback
-El siguiente diagrama detalla cómo el chatbot procesa los mensajes y aprende de las correcciones del usuario en tiempo real.
-
+### Flujo de Aprendizaje en Tiempo Real
 ```mermaid
 sequenceDiagram
     participant U as 👤 Usuario
-    participant CW as 📱 ChatbotWidget
-    participant API as 🤖 API Agente
-    participant AG as 🧠 PydanticAgent
-    participant KB as 📚 KnowledgeBase
+    participant CW as 📱 Chat UI
+    participant AG as 🧠 ChatAgent
+    participant NV as 🟢 Nvidia NIM
+    participant CD as 🧠 ChromaDB
+    participant DB as 🗄️ SQLite
 
-    Note over U,KB: 💬 Flujo de Consulta Normal
-    U->>CW: "¿A qué hora es el turno nocturno?"
-    CW->>API: POST /chat
-    API->>AG: Consultar Conocimiento
-    AG->>KB: Leer turnos.md
-    KB-->>AG: Retorna reglas
-    AG-->>API: Genera respuesta
-    API-->>CW: JSON Response
-    CW-->>U: "El turno nocturno es de 22:00 a 06:00"
-
-    Note over U,KB: 🔄 Flujo de Aprendizaje (Feedback)
-    U->>CW: "No, ahora empieza a las 23:00"
-    CW->>API: POST /chat (Corrección)
-    API->>AG: Analizar corrección
-    AG->>KB: Validar vs Reglas Maestras
-    
-    alt No contradice reglas críticas
-        AG->>KB: 💾 Guardar en user_feedback/corrections.md
-        AG-->>API: Confirmación de aprendizaje
-        API-->>CW: "Entendido, he actualizado mi memoria."
-    else Contradice reglas
-        AG-->>API: Explicación de conflicto
-        API-->>CW: "No puedo guardar eso porque contradice..."
-    end
+    U->>CW: "El encargado es Sergio Mendez"
+    CW->>AG: Enviar Corrección
+    Note right of AG: Trigger Herramienta: save_user_feedback
+    AG->>NV: Generar Embedding (nv-embedqa-e5-v5)
+    NV-->>AG: Vector (1024 dims)
+    AG->>CD: Indexar Vector
+    AG->>DB: Guardar Registro SQL
+    AG-->>CW: Confirmación (ID: feedback_xxx)
+    Note over CW: Muestra Toast: 🧠 Memoria Actualizada
 ```
 
-> 📊 **Ver más diagramas**: Puedes consultar la documentación visual completa en [docs/architecture_diagrams.md](docs/architecture_diagrams.md), incluyendo diagramas de clases y detalles de la API Flask.
+> 📊 **Ver más diagramas**: Puedes consultar la documentación visual completa en [docs/chatbot_architecture.puml](docs/chatbot_architecture.puml).
 
 ---
 
@@ -127,89 +117,24 @@ sequenceDiagram
 
 ```bash
 /chatbot
-├── app/                  # Lógica del Agente y API
-│   ├── application/      # Servicios (Feedback, Chat)
-│   ├── infrastructure/   # Adaptadores (Markdown Loader)
-│   └── interfaces/       # Endpoints FastAPI
-├── knowledge/            # 🧠 CEREBRO DEL SISTEMA
-│   ├── main.md           # Entrada principal
-│   ├── modules/          # Módulos específicos (Personal, Turnos...)
-│   └── user_feedback/    # Memoria de aprendizaje
-├── demo-next/            # Interfaz Web (Chat UI)
-└── main.py               # Punto de entrada del Server
+├── app/                  
+│   ├── infrastructure/   
+│   │   ├── agent/        # Agente Pydantic AI & RAG
+│   │   └── database/     # VectorStore & SQL Models
+├── vector_db/            # 🧠 Base de Datos Vectorial (Persistente)
+├── chatbot.db            # 🗄️ Base de Datos SQL (SQLite)
+├── knowledge/            # 📚 Documentación Base (Markdown)
+├── demo-next/            # 🖥️ Interfaz Web (Next.js)
+└── main.py              
 ```
 
 ---
 
-## ⚡ Instalación y Ejecución
+## 🏗️ Roadmap Técnico (Estado Actual)
 
-### Prerrequisitos
-*   Python 3.10+
-*   Node.js 18+
-
-### 1. Backend (Python)
-```bash
-# Instalar dependencias
-pip install -r requirements.txt
-
-# Iniciar el servidor (Puerto 7842)
-python main.py
-```
-
-### 2. Frontend (Next.js)
-```bash
-cd demo-next
-
-# Instalar dependencias
-npm install
-
-# Iniciar servidor de desarrollo (Puerto 3000)
-npm run dev
-```
-
-Una vez arriba, visita `http://localhost:3000` para interactuar con el asistente.
-
----
-
-## 📖 Guía de Uso del Conocimiento
-
-Para agregar o modificar conocimiento del bot, no toques el código Python. Simplemente edita los archivos Markdown en `knowledge/`:
-
-1.  **Nueva Pantalla Java**: Agrega la documentación técnica en `knowledge/modules/pantallas.md`.
-2.  **Nueva Regla de Negocio**: Edita el módulo correspondiente (ej: `turnos.md`).
-3.  **Refactorización**: Si creas un nuevo archivo `.md`, asegúrate de incluirlo en `knowledge/main.md` usando la sintaxis `[include: modules/archivo.md]`.
-
----
-
-## 🤝 Contribución
-Las correcciones a la lógica de negocio deben hacerse directamente en los Markdowns. Las mejoras al "cerebro" (agente) se hacen en `app/infrastructure/agent/`.
-
----
-
-## 🗺️ Roadmap Técnico (Evolución Enterprise)
-
-Actualmente, el sistema utiliza **Markdown (`.md`)** para gestion del conocimiento (ideal para demos). Para producción Enterprise, la arquitectura evolucionará hacia:
-
-### 1. Persistencia Robusta (SQL)
-- Migrar el feedback de usuarios (`corrections.md`) a una base de datos relacional (PostgreSQL).
-- **Tabla Feedback**: `id`, `user_id`, `suggestion_text`, `status` (PENDING, APPROVED), `created_at`.
-
-### 2. Validación Humana (Human-in-the-Loop)
-- Implementar un **Dashboard de Administración** para revisar sugerencias.
-- Nadie puede "envenenar" al bot; un administrador humano debe aprobar cada sugerencia.
-
-### 3. Búsqueda Vectorial (RAG Avanzado)
-- Una vez aprobada, la información se indexa en una **Base de Datos Vectorial** (Pinecone/pgvector).
-- El chatbot consulta esta base para obtener respuestas precisas en tiempo real.
-
-```mermaid
-graph LR
-    U[Usuario] -->|Feedback| API[API Gateway]
-    API -->|Insert| SQL[(PostgreSQL\nPending)]
-    ADMIN[Admin] -->|Review| DASH[Dashboard]
-    DASH -->|Approve| SQL
-    SQL -->|Trigger| WORKER[Worker]
-    WORKER -->|Embed| VEC[(Vector DB\nRAG)]
-    VEC -->|Context| BOT[Chatbot]
-```
+- [x] **RAG Real**: Implementado con ChromaDB y Nvidia.
+- [x] **Persistencia SQL**: Activa vía SQLModel.
+- [x] **Feedback Reactivo**: Confirmaciones visuales en UI.
+- [ ] **Admin Dashboard**: Panel para revisión de conocimientos (Próximamente).
+- [ ] **Multi-Session Support**: Aislamiento de memoria por usuario.
 

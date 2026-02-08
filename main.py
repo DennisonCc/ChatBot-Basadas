@@ -6,7 +6,7 @@ from app.interfaces.api.routes import router
 from app.infrastructure.common.config import config
 
 # Initialize Logfire
-logfire.configure()
+# logfire.configure()
 
 def create_app() -> FastAPI:
     app = FastAPI(
@@ -16,7 +16,7 @@ def create_app() -> FastAPI:
     )
     
     # Instrument with Logfire
-    logfire.instrument_fastapi(app)
+    # logfire.instrument_fastapi(app)
 
     # CORS configuration
     app.add_middleware(

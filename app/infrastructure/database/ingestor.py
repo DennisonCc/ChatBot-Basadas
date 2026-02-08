@@ -38,20 +38,33 @@ class KnowledgeIngestor:
         
         print("--- ✅ Ingestion Complete ---")
 
-    def _chunk_text(self, text: str, max_chunk_size: int = 1500) -> list:
+    def _chunk_text(self, text: str, max_chunk_size: int = 500) -> list:
         """
-        Divide el texto en fragmentos manejables. 
-        En producción se usarían librerías como LangChain RecursiveCharacterTextSplitter.
+        Divide el texto en fragmentos asegurando no pasar los 512 tokens.
+        Usa un límite de 500 caracteres como medida de seguridad extrema.
         """
-        # Una división simple por encabezados o bloques de texto
-        paragraphs = text.split("\n\n")
         chunks = []
-        current_chunk = ""
+        paragraphs = text.split("\n\n")
         
+        current_chunk = ""
         for p in paragraphs:
+            # Si el párrafo es muy largo por sí solo, lo dividimos
+            if len(p) > max_chunk_size:
+                # Si había algo acumulado, lo guardamos
+                if current_chunk:
+                    chunks.append(current_chunk.strip())
+                    current_chunk = ""
+                
+                # Dividimos el párrafo largo en trozos de max_chunk_size
+                for i in range(0, len(p), max_chunk_size):
+                    chunks.append(p[i:i+max_chunk_size].strip())
+                continue
+
+            # Si acumular este párrafo no supera el límite
             if len(current_chunk) + len(p) < max_chunk_size:
                 current_chunk += p + "\n\n"
             else:
+                # Guardamos lo que tenemos y empezamos nuevo chunk con este párrafo
                 if current_chunk:
                     chunks.append(current_chunk.strip())
                 current_chunk = p + "\n\n"

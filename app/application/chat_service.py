@@ -9,7 +9,8 @@ class ChatService:
         try:
             response_text = await self.chat_agent.get_response(
                 request.message, 
-                current_screen=request.current_screen
+                current_screen=request.current_screen,
+                session_id=request.session_id
             )
             return ChatResponse(
                 response=response_text,
