@@ -6,6 +6,7 @@ from app.infrastructure.common.config import config
 import logfire
 
 from app.infrastructure.common.context_loader import loader
+from app.infrastructure.database.vector_store import vector_store
 
 class PydanticChatAgent(IChatAgent):
     def __init__(self, backend_gateway: IBackendGateway):
@@ -48,15 +49,6 @@ class PydanticChatAgent(IChatAgent):
             return str([p.dict() for p in pauses])
 
         @self.agent.tool
-        async def check_backend_health(ctx: RunContext[IBackendGateway]) -> str:
-            """Verifica si el backend Flask está respondiendo correctamente."""
-            is_healthy = await ctx.deps.check_health()
-            if is_healthy:
-                return "El backend Flask está ONLINE y respondiendo correctamente."
-            else:
-                return "El backend Flask parece estar OFFLINE o con errores."
-
-        @self.agent.tool
         def get_navigation_guide(ctx: RunContext[IBackendGateway], screen_name: str) -> str:
             """Proporciona instrucciones sobre cómo llegar o qué hacer en una pantalla específica."""
             guides = {
@@ -71,21 +63,15 @@ class PydanticChatAgent(IChatAgent):
         def save_user_feedback(ctx: RunContext[IBackendGateway], info_tipo: str, info_contenido: str, contexto: str = "") -> str:
             """
             Guarda información adicional proporcionada por el usuario durante la conversación.
-            SOLO usar cuando el usuario confirma que la información es correcta.
-            NUNCA guardar información que contradiga la KB existente.
             
             Args:
-                info_tipo: Tipo de información (ej: 'tip', 'configuracion', 'proceso', 'area', 'horario')
-                info_contenido: El contenido de la información a guardar
-                contexto: Contexto adicional de la conversación
-            
-            Returns:
-                Mensaje de confirmación o error
+                info_tipo: Tipo de información
+                info_contenido: El contenido a guardar
+                contexto: Contexto adicional
             """
             from app.application.feedback_service import feedback_service
             from app.domain.models import FeedbackRequest
             
-            # Crear el request de feedback con formato de información adicional
             feedback = FeedbackRequest(
                 original_question=f"[{info_tipo.upper()}]",
                 original_response=contexto,
@@ -97,11 +83,23 @@ class PydanticChatAgent(IChatAgent):
             result = feedback_service.save_feedback(feedback)
             
             if result.success:
-                return f"✅ Información guardada correctamente (ID: {result.feedback_id}). Esta información estará disponible para futuras consultas."
+                return f"✅ Información guardada e indexada en ChromaDB (ID: {result.feedback_id})."
             else:
-                return f"❌ No se pudo guardar la información: {result.message}"
+                return f"❌ Error al guardar: {result.message}"
 
     async def get_response(self, message: str, current_screen: str = "Principal") -> str:
-        full_message = f"[Contexto: El usuario está en la pantalla '{current_screen}']\nUsuario: {message}"
+        # Búsqueda Semántica Real (RAG)
+        additional_context = ""
+        try:
+            search_results = vector_store.query_similar(message, n_results=2)
+            if search_results and search_results['documents'] and search_results['documents'][0]:
+                relevant_docs = search_results['documents'][0]
+                additional_context = "\n### 🧠 MEMORIA VECTORIAL (Recuperado):\n"
+                for doc in relevant_docs:
+                    additional_context += f"- {doc}\n"
+        except Exception as e:
+            print(f"[RAG ERROR] {e}")
+
+        full_message = f"[PANTALLA: {current_screen}]\n{additional_context}\nUsuario: {message}"
         result = await self.agent.run(full_message, deps=self.backend_gateway)
         return result.output

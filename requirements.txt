@@ -19,13 +19,12 @@ httpx==0.28.1
 # Environment variables
 python-dotenv==1.0.1
 
-# Database (SQLAlchemy + PostgreSQL)
+# Database (SQLAlchemy + PostgreSQL + Vector)
 sqlalchemy==2.0.36
 psycopg2-binary==2.9.10
 alembic==1.14.0
-
-# SQLModel (Pydantic + SQLAlchemy)
-sqlmodel==0.0.22
+chromadb
+sqlmodel==0.0.32
 
 # Excel export functionality
 openpyxl==3.1.5

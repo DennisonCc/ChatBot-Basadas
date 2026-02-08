@@ -3,6 +3,7 @@ from datetime import datetime
 from pathlib import Path
 from sqlmodel import Session, create_engine, SQLModel
 from app.infrastructure.database.models import Feedback
+from app.infrastructure.database.vector_store import vector_store
 from app.domain.models import FeedbackRequest, FeedbackResponse
 
 # Configuración de base de datos (SQLite para desarrollo, escalable a PostgreSQL)
@@ -95,18 +96,23 @@ Las entradas más recientes aparecen primero.
                 f.write(new_content)
             
             # ------------------------------------------------------------------
-            # PERSISTENCIA PRODUCTION-READY (SQL + RAG Mock)
+            # PERSISTENCIA PRODUCTION-READY (SQL + RAG REAL)
             # ------------------------------------------------------------------
-            vector_id = f"vec_{uuid.uuid4().hex[:8]}"
-            print(f"[RAG] Generating embeddings for feedback content... [DIM: 1536]")
-            print(f"[RAG] Storing vector {vector_id} in local index...")
+            print(f"[RAG] Generating real embeddings for feedback content...")
+            
+            # Guardar en Vector Store (ChromaDB + Nvidia)
+            vector_store.add_feedback(
+                feedback_id=feedback_id, 
+                text=feedback.corrected_response, 
+                metadata={"category": feedback.category, "timestamp": timestamp}
+            )
 
             # Guardar en base de datos SQL
-            self._save_to_sql(feedback, feedback_id, vector_id)
+            self._save_to_sql(feedback, feedback_id, feedback_id)
 
             return FeedbackResponse(
                 success=True,
-                message=f"Información guardada. Vector embedding generated (ID: {vector_id}) and stored in SQL+Vector DB.",
+                message=f"Información guardada. Vector indexado en ChromaDB (ID: {feedback_id}).",
                 feedback_id=feedback_id
             )
             
